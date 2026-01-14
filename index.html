@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水獺貝殼大冒險 | 即時戰情室 🦦</title>
+    <title>水獺貝殼大冒險 |踩地雷🦦</title>
     <style>
         :root {
             --otter-brown: #9c6644;
@@ -144,7 +144,7 @@
 
         <div class="side-panel">
             <div class="info-card">
-                <img id="otter-profile" src="https://i1.kknews.cc/bPZi9uwgVRzyeC1C3APA2aPwx9Hg0ajGlQ/0.jpg" alt="水獺">
+                <img id="otter-profile" src="images/0.gif" alt="水獺">
                 <h3 id="game-msg" style="color: var(--otter-brown); margin: 10px 0;">任務進行中...</h3>
                 <p style="font-size: 0.9em; color: #666; line-height: 1.4;">幫水獺翻開石頭找貝殼，<br>要小心螃蟹喔！</p>
             </div>
@@ -235,8 +235,21 @@
     }
 
     function reveal(r, c) {
-        if(over || board[r][c].rev || board[r][c].f) return;
-        if(!timerRef) timerRef = setInterval(() => { seconds++; document.getElementById('timer-val').innerText = seconds; }, 1000);
+    
+    if (r < 0 || r >= R || c < 0 || c >= C) return; 
+
+    
+    if (over || board[r][c].rev || board[r][c].f) return;
+    
+    
+    if (!timerRef) {
+        timerRef = setInterval(() => { 
+            seconds++; 
+            document.getElementById('timer-val').innerText = seconds; 
+        }, 1000);
+    }
+    
+}
         
         let cell = board[r][c];
         cell.rev = true; cell.el.classList.add('rev');
@@ -262,7 +275,6 @@
             for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) reveal(r+i, c+j);
         }
         checkWin();
-    }
 
     function checkWin() {
         let rv = 0;
