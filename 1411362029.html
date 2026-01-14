@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水獺貝殼大冒險 | 即時戰情室 🦦</title>
+    <style>
+        :root {
+            --otter-brown: #9c6644;
+            --ocean-blue: #0077b6;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            margin: 0; padding: 20px;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            /* 換回清爽的水藍色漸層背景 */
+            background: linear-gradient(135deg, #caf0f8 0%, #0077b6 100%) !important;
+            font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif;
+            overflow-x: hidden; position: relative;
+        }
+
+        /* 動態水藍氣泡 */
+        .bubble {
+            position: absolute; background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%; bottom: -50px;
+            animation: rise 10s infinite ease-in; z-index: 0;
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0.5; }
+            100% { transform: translateY(-110vh) scale(1.5); opacity: 0; }
+        }
+
+        /* 標題區塊 */
+        .header-section {
+            background: var(--glass);
+            padding: 10px 40px; border-radius: 50px;
+            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 10; display: flex; align-items: center; gap: 10px;
+        }
+
+        /* 兩欄式佈局 */
+        .dashboard {
+            max-width: 1000px; width: 100%;
+            display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px;
+            z-index: 10;
+        }
+
+        /* 左側遊戲區：解決溢出問題 */
+        .game-panel {
+            background: var(--glass);
+            border-radius: 30px; padding: 25px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            min-width: 0;
+        }
+
+        /* 遊戲盤面保護容器 */
+        #board-wrapper {
+            width: 100%;
+            overflow-x: auto; /* 當 16x16 太大時會出現內部捲軸 */
+            background: rgba(173, 232, 244, 0.4); border-radius: 15px;
+            padding: 15px; margin: 15px 0;
+            display: flex; justify-content: center;
+        }
+
+        #board { display: grid; gap: 4px; width: fit-content; }
+
+        .cell {
+            width: 32px; height: 32px;
+            background: #90e0ef; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold;
+            border-bottom: 3px solid #00b4d8; transition: 0.1s;
+        }
+        .cell:hover:not(.rev) { background: #fff; transform: translateY(-2px); }
+        .cell.rev { background: #fff; border: none; cursor: default; }
+
+        /* 右側資訊區 */
+        .side-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .info-card {
+            background: var(--glass);
+            border-radius: 25px; padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        /* 你指定的水獺頭像 */
+        #otter-profile {
+            width: 130px; height: 130px; border-radius: 50%;
+            border: 4px solid var(--otter-brown); object-fit: cover;
+            margin-bottom: 10px; background: #eee;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-box {
+            background: #fefae0; padding: 12px; border-radius: 15px;
+            border: 1px solid #e9c46a;
+        }
+        .label { font-size: 0.85em; color: #666; font-weight: bold; margin-bottom: 5px; }
+        .value { font-size: 1.6em; color: var(--otter-brown); font-weight: bold; }
+
+        .btn {
+            background: var(--otter-brown); color: white;
+            border: none; padding: 12px 30px; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(156, 102, 68, 0.3);
+        }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+
+        .diff-btn {
+            background: var(--ocean-blue); font-size: 0.9em;
+            padding: 8px 18px; border-radius: 20px; margin: 0 5px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h2 style="color: var(--otter-brown); margin: 0;">🦦 水獺貝殼大冒險</h2>
+    </div>
+
+    <div class="dashboard">
+        <div class="game-panel">
+            <div style="margin-bottom: 5px;">
+                <button class="btn diff-btn" onclick="setup(9,9,10, 'easy')">新手區 (9x9)</button>
+                <button class="btn diff-btn" style="background:#2a9d8f" onclick="setup(16,16,40, 'med')">高手區 (16x16)</button>
+            </div>
+            
+            <div id="board-wrapper">
+                <div id="board"></div>
+            </div>
+
+            <button class="btn" style="width: 200px;" onclick="initGame()">重新洗牌 🔄</button>
+        </div>
+
+        <div class="side-panel">
+            <div class="info-card">
+                <img id="otter-profile" src="https://i1.kknews.cc/bPZi9uwgVRzyeC1C3APA2aPwx9Hg0ajGlQ/0.jpg" alt="水獺">
+                <h3 id="game-msg" style="color: var(--otter-brown); margin: 10px 0;">任務進行中...</h3>
+                <p style="font-size: 0.9em; color: #666; line-height: 1.4;">幫水獺翻開石頭找貝殼，<br>要小心螃蟹喔！</p>
+            </div>
+
+            <div class="info-card">
+                <h4 style="margin: 0 0 15px 0; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px;">即時數據庫</h4>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="label">螃蟹警報</div>
+                        <div class="value" id="mine-val">10</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">潛水計時</div>
+                        <div class="value"><span id="timer-val">0</span>s</div>
+                    </div>
+                    <div class="stat-box" style="grid-column: span 2;">
+                        <div class="label">最佳探險紀錄</div>
+                        <div class="value" id="best-val" style="font-size: 1.3em;">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let R, C, M, curMode, board, over, timerRef, seconds;
+
+    // 氣泡動畫
+    function initBubbles() {
+        for(let i=0; i<15; i++) {
+            let b = document.createElement('div');
+            b.className = 'bubble';
+            let s = Math.random()*20+10+'px';
+            b.style.width = s; b.style.height = s;
+            b.style.left = Math.random()*100+'vw';
+            b.style.animationDuration = Math.random()*5+5+'s';
+            b.style.animationDelay = Math.random()*5+'s';
+            document.body.appendChild(b);
+        }
+    }
+
+    function setup(r, c, m, name) {
+        R=r; C=c; M=m; curMode=name;
+        initGame();
+    }
+
+    function initGame() {
+        over = false; seconds = 0; clearInterval(timerRef); timerRef = null;
+        document.getElementById('timer-val').innerText = 0;
+        document.getElementById('mine-val').innerText = M;
+        document.getElementById('game-msg').innerText = "任務進行中...";
+        
+        const best = localStorage.getItem('otter_best_' + curMode);
+        document.getElementById('best-val').innerText = best ? best + 's' : '--';
+
+        const bEl = document.getElementById('board'); 
+        bEl.innerHTML = '';
+        bEl.style.gridTemplateColumns = `repeat(${C}, 32px)`;
+        
+        board = Array.from({length:R}, ()=>[]);
+        for(let i=0; i<R; i++) {
+            for(let j=0; j<C; j++) {
+                let cell = document.createElement('div'); cell.className='cell';
+                cell.onclick = () => reveal(i,j);
+                cell.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    if(!over && !board[i][j].rev) {
+                        board[i][j].f = !board[i][j].f;
+                        cell.innerText = board[i][j].f ? '🚩' : '';
+                        updateMines();
+                    }
+                };
+                bEl.appendChild(cell);
+                board[i][j] = { mine: false, rev: false, f: false, el: cell };
+            }
+        }
+        let p = 0;
+        while(p < M) {
+            let rr = Math.floor(Math.random()*R), cc = Math.floor(Math.random()*C);
+            if(!board[rr][cc].mine) { board[rr][cc].mine = true; p++; }
+        }
+    }
+
+    function updateMines() {
+        let f = 0;
+        board.forEach(row => row.forEach(c => { if(c.f) f++; }));
+        document.getElementById('mine-val').innerText = M - f;
+    }
+
+    function reveal(r, c) {
+        if(over || board[r][c].rev || board[r][c].f) return;
+        if(!timerRef) timerRef = setInterval(() => { seconds++; document.getElementById('timer-val').innerText = seconds; }, 1000);
+        
+        let cell = board[r][c];
+        cell.rev = true; cell.el.classList.add('rev');
+        
+        if(cell.mine) {
+            cell.el.innerText = '🦀';
+            over = true; clearInterval(timerRef);
+            document.getElementById('game-msg').innerText = "哎呀！被螃蟹夾到了！";
+            board.forEach(row => row.forEach(c => { if(c.mine) { c.el.classList.add('rev'); c.el.innerText='🦀'; } }));
+            return;
+        }
+        
+        let cnt = 0;
+        for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+            let nr = r+i, nc = c+j;
+            if(nr>=0 && nr<R && nc>=0 && nc<C && board[nr][nc].mine) cnt++;
+        }
+        
+        if(cnt > 0) {
+            cell.el.innerText = cnt;
+            cell.el.style.color = ['#0077b6', '#38b000', '#d00000', '#6a0dad'][cnt-1];
+        } else {
+            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) reveal(r+i, c+j);
+        }
+        checkWin();
+    }
+
+    function checkWin() {
+        let rv = 0;
+        board.forEach(row => row.forEach(c => { if(c.rev) rv++; }));
+        if(rv === R*C - M) {
+            over = true; clearInterval(timerRef);
+            document.getElementById('game-msg').innerText = "任務成功！找到貝殼了！✨";
+            const old = localStorage.getItem('otter_best_' + curMode);
+            if(!old || seconds < old) localStorage.setItem('otter_best_' + curMode, seconds);
+        }
+    }
+
+    initBubbles();
+    setup(9, 9, 10, 'easy');
+</script>
+</body>
+</html>
