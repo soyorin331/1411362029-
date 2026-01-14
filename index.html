@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水獺貝殼大冒險 |踩地雷🦦</title>
+    <title>水獺貝殼大冒險 | 踩地雷🦦</title>
     <style>
         :root {
             --otter-brown: #9c6644;
@@ -15,13 +15,11 @@
             margin: 0; padding: 20px;
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
-            /* 換回清爽的水藍色漸層背景 */
             background: linear-gradient(135deg, #caf0f8 0%, #0077b6 100%) !important;
             font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif;
             overflow-x: hidden; position: relative;
         }
 
-        /* 動態水藍氣泡 */
         .bubble {
             position: absolute; background: rgba(255, 255, 255, 0.4);
             border-radius: 50%; bottom: -50px;
@@ -32,7 +30,6 @@
             100% { transform: translateY(-110vh) scale(1.5); opacity: 0; }
         }
 
-        /* 標題區塊 */
         .header-section {
             background: var(--glass);
             padding: 10px 40px; border-radius: 50px;
@@ -40,14 +37,12 @@
             z-index: 10; display: flex; align-items: center; gap: 10px;
         }
 
-        /* 兩欄式佈局 */
         .dashboard {
             max-width: 1000px; width: 100%;
             display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px;
             z-index: 10;
         }
 
-        /* 左側遊戲區：解決溢出問題 */
         .game-panel {
             background: var(--glass);
             border-radius: 30px; padding: 25px;
@@ -57,10 +52,9 @@
             min-width: 0;
         }
 
-        /* 遊戲盤面保護容器 */
         #board-wrapper {
             width: 100%;
-            overflow-x: auto; /* 當 16x16 太大時會出現內部捲軸 */
+            overflow-x: auto;
             background: rgba(173, 232, 244, 0.4); border-radius: 15px;
             padding: 15px; margin: 15px 0;
             display: flex; justify-content: center;
@@ -78,7 +72,6 @@
         .cell:hover:not(.rev) { background: #fff; transform: translateY(-2px); }
         .cell.rev { background: #fff; border: none; cursor: default; }
 
-        /* 右側資訊區 */
         .side-panel { display: flex; flex-direction: column; gap: 20px; }
 
         .info-card {
@@ -88,7 +81,6 @@
             text-align: center;
         }
 
-        /* 你指定的水獺頭像 */
         #otter-profile {
             width: 130px; height: 130px; border-radius: 50%;
             border: 4px solid var(--otter-brown); object-fit: cover;
@@ -172,7 +164,6 @@
 <script>
     let R, C, M, curMode, board, over, timerRef, seconds;
 
-    // 氣泡動畫
     function initBubbles() {
         for(let i=0; i<15; i++) {
             let b = document.createElement('div');
@@ -235,22 +226,17 @@
     }
 
     function reveal(r, c) {
-    
-    if (r < 0 || r >= R || c < 0 || c >= C) return; 
-
-    
-    if (over || board[r][c].rev || board[r][c].f) return;
-    
-    
-    if (!timerRef) {
-        timerRef = setInterval(() => { 
-            seconds++; 
-            document.getElementById('timer-val').innerText = seconds; 
-        }, 1000);
-    }
-    
-}
+        // 🌟 核心修復：防止存取 undefined
+        if (r < 0 || r >= R || c < 0 || c >= C) return; 
+        if (over || board[r][c].rev || board[r][c].f) return;
         
+        if (!timerRef) {
+            timerRef = setInterval(() => { 
+                seconds++; 
+                document.getElementById('timer-val').innerText = seconds; 
+            }, 1000);
+        }
+
         let cell = board[r][c];
         cell.rev = true; cell.el.classList.add('rev');
         
@@ -258,7 +244,9 @@
             cell.el.innerText = '🦀';
             over = true; clearInterval(timerRef);
             document.getElementById('game-msg').innerText = "哎呀！被螃蟹夾到了！";
-            board.forEach(row => row.forEach(c => { if(c.mine) { c.el.classList.add('rev'); c.el.innerText='🦀'; } }));
+            board.forEach(row => row.forEach(c => { 
+                if(c.mine) { c.el.classList.add('rev'); c.el.innerText='🦀'; } 
+            }));
             return;
         }
         
@@ -275,6 +263,7 @@
             for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) reveal(r+i, c+j);
         }
         checkWin();
+    }
 
     function checkWin() {
         let rv = 0;
